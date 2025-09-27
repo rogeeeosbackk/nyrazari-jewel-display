@@ -41,9 +41,14 @@ const Header: React.FC = () => {
       <div className="container mx-auto px-4 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
+          <Link to="/" className="flex items-center space-x-3">
+            <img 
+              src="/src/assets/nyrazari-logo.png" 
+              alt="Nyrazari Logo" 
+              className="h-12 w-12 object-contain"
+            />
             <motion.div
-              className="text-2xl md:text-3xl font-bold text-luxury"
+              className="text-2xl md:text-3xl font-playfair font-bold text-luxury"
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 400, damping: 10 }}
             >
@@ -57,7 +62,7 @@ const Header: React.FC = () => {
               <Link
                 key={item.name}
                 to={item.path}
-                className={`font-medium transition-colors duration-200 ${
+                className={`font-medium font-cormorant transition-colors duration-200 ${
                   location.pathname === item.path
                     ? 'text-primary'
                     : 'text-foreground hover:text-primary'
@@ -126,7 +131,7 @@ const Header: React.FC = () => {
                 <Link
                   key={item.name}
                   to={item.path}
-                  className={`font-medium py-2 transition-colors duration-200 ${
+                  className={`font-medium font-cormorant py-2 transition-colors duration-200 ${
                     location.pathname === item.path
                       ? 'text-primary'
                       : 'text-foreground hover:text-primary'
