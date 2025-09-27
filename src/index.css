@@ -150,7 +150,7 @@
   }
 
   .card-product {
-    @apply card-luxury p-6 group cursor-pointer;
+    @apply card-luxury p-6 cursor-pointer;
   }
 
   /* Text Styles */
