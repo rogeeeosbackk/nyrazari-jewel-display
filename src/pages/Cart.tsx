@@ -1,25 +1,44 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ShoppingBag, Minus, Plus, X, ArrowRight } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import CustomerForm, { CustomerData } from '../components/CustomerForm';
+import WhatsAppModal from '../components/WhatsAppModal';
 
 const Cart: React.FC = () => {
   const { items, total, itemCount, removeFromCart, updateQuantity, clearCart } = useCart();
   const { toast } = useToast();
+  const [showCustomerForm, setShowCustomerForm] = useState(false);
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
+  const [customerName, setCustomerName] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleCheckout = () => {
+  const handleProceedToCheckout = () => {
     if (items.length === 0) return;
+    setShowCustomerForm(true);
+  };
+
+  const handleCustomerFormSubmit = async (customerData: CustomerData) => {
+    setIsProcessing(true);
     
-    toast({
-      title: "Order placed successfully!",
-      description: `Your order of ${itemCount} items for $${total.toFixed(2)} has been processed.`,
-      duration: 3000,
-    });
+    // Simulate processing delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
+    setCustomerName(customerData.name);
+    setShowCustomerForm(false);
+    setShowWhatsAppModal(true);
+    setIsProcessing(false);
+    
+    // Clear cart after successful order
     clearCart();
+  };
+
+  const handleWhatsAppModalClose = () => {
+    setShowWhatsAppModal(false);
+    setCustomerName('');
   };
 
   if (items.length === 0) {
@@ -182,7 +201,7 @@ const Cart: React.FC = () => {
               <div className="space-y-3">
                 <Button 
                   className="w-full btn-luxury text-lg py-4"
-                  onClick={handleCheckout}
+                  onClick={handleProceedToCheckout}
                 >
                   Proceed to Checkout
                 </Button>
@@ -212,6 +231,52 @@ const Cart: React.FC = () => {
             </div>
           </motion.div>
         </div>
+
+        {/* Customer Information Modal */}
+        {showCustomerForm && (
+          <motion.div
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="bg-background rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+            >
+              <div className="p-6 border-b">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl font-bold">Contact Information</h2>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowCustomerForm(false)}
+                  >
+                    <X className="h-5 w-5" />
+                  </Button>
+                </div>
+                <p className="text-muted-foreground mt-2">
+                  Please provide your contact details so we can reach you about your order.
+                </p>
+              </div>
+              <div className="p-6">
+                <CustomerForm 
+                  onSubmit={handleCustomerFormSubmit}
+                  isLoading={isProcessing}
+                />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* WhatsApp Contact Modal */}
+        <WhatsAppModal
+          isOpen={showWhatsAppModal}
+          onClose={handleWhatsAppModalClose}
+          customerName={customerName}
+        />
       </div>
     </div>
   );

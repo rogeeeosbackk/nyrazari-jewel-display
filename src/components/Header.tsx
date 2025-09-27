@@ -80,11 +80,6 @@ const Header: React.FC = () => {
 
           {/* Right Actions */}
           <div className="flex items-center space-x-4">
-            {/* Search Button */}
-            <Button variant="ghost" size="icon" className="btn-ghost-luxury">
-              <Search className="h-5 w-5" />
-            </Button>
-
             {/* Cart Button */}
             <Link to="/cart" className="relative">
               <Button variant="ghost" size="icon" className="btn-ghost-luxury">
