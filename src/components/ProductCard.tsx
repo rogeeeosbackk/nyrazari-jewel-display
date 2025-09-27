@@ -64,6 +64,15 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
               </span>
             </div>
           )}
+          
+          {/* Sale badge */}
+          {product.offerPrice && (
+            <div className="absolute top-3 right-3">
+              <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                SALE
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="space-y-3">
@@ -73,7 +82,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
           </div>
 
           {/* Product name */}
-          <h3 className="font-semibold text-lg leading-tight group-hover:text-primary transition-colors duration-200">
+          <h3 className="font-playfair font-semibold text-lg leading-tight group-hover:text-primary transition-colors duration-200">
             {product.name}
           </h3>
 
@@ -84,8 +93,21 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
 
           {/* Price and Add to Cart */}
           <div className="flex items-center justify-between">
-            <div className="text-2xl font-bold text-primary">
-              ${product.price.toLocaleString()}
+            <div className="flex flex-col">
+              {product.offerPrice ? (
+                <>
+                  <div className="text-2xl font-bold text-primary">
+                    ${product.offerPrice.toLocaleString()}
+                  </div>
+                  <div className="text-sm text-muted-foreground line-through">
+                    ${product.price.toLocaleString()}
+                  </div>
+                </>
+              ) : (
+                <div className="text-2xl font-bold text-primary">
+                  ${product.price.toLocaleString()}
+                </div>
+              )}
             </div>
             
             <Button

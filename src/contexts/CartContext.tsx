@@ -4,6 +4,7 @@ export interface Product {
   id: string;
   name: string;
   price: number;
+  offerPrice?: number;
   image: string;
   category: string;
   description: string;
@@ -77,7 +78,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
 
 const calculateTotals = (items: CartItem[]): CartState => ({
   items,
-  total: items.reduce((sum, item) => sum + item.price * item.quantity, 0),
+  total: items.reduce((sum, item) => sum + (item.offerPrice || item.price) * item.quantity, 0),
   itemCount: items.reduce((sum, item) => sum + item.quantity, 0),
 });
 

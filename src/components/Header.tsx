@@ -62,7 +62,7 @@ const Header: React.FC = () => {
               <Link
                 key={item.name}
                 to={item.path}
-                className={`font-medium font-cormorant transition-colors duration-200 ${
+                className={`font-medium font-inter transition-colors duration-200 ${
                   location.pathname === item.path
                     ? 'text-primary'
                     : 'text-foreground hover:text-primary'
@@ -131,7 +131,7 @@ const Header: React.FC = () => {
                 <Link
                   key={item.name}
                   to={item.path}
-                  className={`font-medium font-cormorant py-2 transition-colors duration-200 ${
+                  className={`font-medium font-inter py-2 transition-colors duration-200 ${
                     location.pathname === item.path
                       ? 'text-primary'
                       : 'text-foreground hover:text-primary'
