@@ -25,6 +25,8 @@ const Admin: React.FC = () => {
     stock: '',
     image: '',
   });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>('');
 
   const { products, addProduct, updateProduct, deleteProduct } = useProducts();
   const { toast } = useToast();
@@ -71,6 +73,24 @@ const Admin: React.FC = () => {
       image: '',
     });
     setEditingProduct(null);
+    setSelectedFile(null);
+    setImagePreview('');
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setImagePreview(result);
+        setFormData(prev => ({ ...prev, image: result }));
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -122,6 +142,8 @@ const Admin: React.FC = () => {
       stock: product.stock.toString(),
       image: product.image,
     });
+    setImagePreview(product.image);
+    setSelectedFile(null);
     setIsDialogOpen(true);
   };
 
@@ -316,12 +338,24 @@ const Admin: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Image URL</label>
-                  <Input
-                    value={formData.image}
-                    onChange={(e) => setFormData(prev => ({ ...prev, image: e.target.value }))}
-                    placeholder="Enter image URL"
-                  />
+                  <label className="text-sm font-medium mb-2 block">Product Image</label>
+                  <div className="space-y-3">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileSelect}
+                      className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
+                    />
+                    {imagePreview && (
+                      <div className="mt-3">
+                        <img
+                          src={imagePreview}
+                          alt="Preview"
+                          className="w-32 h-32 object-cover rounded-lg border"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div>
