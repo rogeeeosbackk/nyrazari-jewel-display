@@ -6,42 +6,42 @@
 
 @layer base {
   :root {
-    /* Luxury Color Palette */
+    /* Black & White Color Palette */
     --background: 0 0% 100%;
-    --foreground: 0 0% 8%;
+    --foreground: 0 0% 0%;
 
-    /* Gold Brand Colors */
-    --primary: 45 100% 51%;          /* Rich Gold */
-    --primary-foreground: 0 0% 8%;
-    --primary-glow: 48 100% 67%;     /* Bright Gold */
+    /* Black Brand Colors */
+    --primary: 0 0% 0%;              /* Pure Black */
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 0 0% 20%;        /* Dark Gray */
     
-    --secondary: 0 0% 98%;           /* Pearl White */
-    --secondary-foreground: 0 0% 15%;
+    --secondary: 0 0% 98%;           /* Off White */
+    --secondary-foreground: 0 0% 0%;
     
-    --accent: 39 100% 85%;           /* Champagne */
-    --accent-foreground: 0 0% 15%;
+    --accent: 0 0% 85%;              /* Light Gray */
+    --accent-foreground: 0 0% 0%;
 
     /* Card & Surface Colors */
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 8%;
-    --card-luxury: 45 15% 96%;       /* Cream */
+    --card-foreground: 0 0% 0%;
+    --card-luxury: 0 0% 98%;         /* Off White */
 
     /* Interactive States */
-    --muted: 45 20% 95%;
+    --muted: 0 0% 95%;
     --muted-foreground: 0 0% 40%;
     
-    --border: 45 30% 90%;
-    --input: 45 30% 95%;
-    --ring: 45 100% 51%;
+    --border: 0 0% 90%;
+    --input: 0 0% 95%;
+    --ring: 0 0% 0%;
 
-    /* Luxury Gradients */
-    --gradient-gold: linear-gradient(135deg, hsl(45 100% 51%) 0%, hsl(39 100% 45%) 100%);
-    --gradient-luxury: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(45 15% 96%) 100%);
+    /* Black & White Gradients */
+    --gradient-gold: linear-gradient(135deg, hsl(0 0% 0%) 0%, hsl(0 0% 20%) 100%);
+    --gradient-luxury: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(0 0% 98%) 100%);
     --gradient-hero: linear-gradient(135deg, hsl(0 0% 2%) 0%, hsl(0 0% 15%) 100%);
 
     /* Elegant Shadows */
-    --shadow-luxury: 0 20px 40px -12px hsl(45 100% 51% / 0.25);
-    --shadow-gold: 0 8px 32px hsl(45 100% 51% / 0.35);
+    --shadow-luxury: 0 20px 40px -12px hsl(0 0% 0% / 0.25);
+    --shadow-gold: 0 8px 32px hsl(0 0% 0% / 0.35);
     --shadow-soft: 0 4px 24px hsl(0 0% 0% / 0.08);
 
     /* Animations */
@@ -67,30 +67,30 @@
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
-  /* Dark mode (premium dark theme) */
+  /* Dark mode (black & white theme) */
   .dark {
     --background: 0 0% 2%;
     --foreground: 0 0% 95%;
     
-    --primary: 45 100% 51%;
-    --primary-foreground: 0 0% 8%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
     
     --secondary: 0 0% 8%;
     --secondary-foreground: 0 0% 95%;
     
-    --accent: 39 100% 85%;
-    --accent-foreground: 0 0% 8%;
+    --accent: 0 0% 85%;
+    --accent-foreground: 0 0% 0%;
     
     --card: 0 0% 4%;
     --card-foreground: 0 0% 95%;
-    --card-luxury: 45 15% 8%;
+    --card-luxury: 0 0% 8%;
     
     --muted: 0 0% 8%;
     --muted-foreground: 0 0% 60%;
     
     --border: 0 0% 15%;
     --input: 0 0% 8%;
-    --ring: 45 100% 51%;
+    --ring: 0 0% 100%;
   }
 }
 
