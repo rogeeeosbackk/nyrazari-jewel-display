@@ -23,10 +23,10 @@ const Admin: React.FC = () => {
     category: '',
     description: '',
     stock: '',
-    image: '',
+    images: [] as string[],
   });
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>('');
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
   const { products, addProduct, updateProduct, deleteProduct } = useProducts();
   const { toast } = useToast();
@@ -70,27 +70,51 @@ const Admin: React.FC = () => {
       category: '',
       description: '',
       stock: '',
-      image: '',
+      images: [],
     });
     setEditingProduct(null);
-    setSelectedFile(null);
-    setImagePreview('');
+    setSelectedFiles([]);
+    setImagePreviews([]);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      
-      // Create preview URL
+    const files = Array.from(e.target.files || []);
+    const maxFiles = 3;
+    
+    if (files.length + selectedFiles.length > maxFiles) {
+      toast({
+        title: "Too many images",
+        description: `You can only upload up to ${maxFiles} images per product.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const newFiles = [...selectedFiles, ...files].slice(0, maxFiles);
+    setSelectedFiles(newFiles);
+
+    // Create preview URLs
+    const newPreviews: string[] = [];
+    newFiles.forEach((file) => {
       const reader = new FileReader();
       reader.onload = (e) => {
         const result = e.target?.result as string;
-        setImagePreview(result);
-        setFormData(prev => ({ ...prev, image: result }));
+        newPreviews.push(result);
+        if (newPreviews.length === newFiles.length) {
+          setImagePreviews(newPreviews);
+          setFormData(prev => ({ ...prev, images: newPreviews }));
+        }
       };
       reader.readAsDataURL(file);
-    }
+    });
+  };
+
+  const handleRemoveImage = (index: number) => {
+    const newFiles = selectedFiles.filter((_, i) => i !== index);
+    const newPreviews = imagePreviews.filter((_, i) => i !== index);
+    setSelectedFiles(newFiles);
+    setImagePreviews(newPreviews);
+    setFormData(prev => ({ ...prev, images: newPreviews }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -111,7 +135,7 @@ const Admin: React.FC = () => {
       category: formData.category,
       description: formData.description,
       stock: parseInt(formData.stock) || 0,
-      image: formData.image || '/src/assets/placeholder-product.jpg',
+      images: formData.images.length > 0 ? formData.images : ['/src/assets/placeholder-product.jpg'],
     };
 
     if (editingProduct) {
@@ -140,10 +164,10 @@ const Admin: React.FC = () => {
       category: product.category,
       description: product.description,
       stock: product.stock.toString(),
-      image: product.image,
+      images: product.images || [],
     });
-    setImagePreview(product.image);
-    setSelectedFile(null);
+    setImagePreviews(product.images || []);
+    setSelectedFiles([]);
     setIsDialogOpen(true);
   };
 
@@ -338,21 +362,36 @@ const Admin: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Product Image</label>
+                  <label className="text-sm font-medium mb-2 block">Product Images (Up to 3)</label>
                   <div className="space-y-3">
                     <Input
                       type="file"
                       accept="image/*"
+                      multiple
                       onChange={handleFileSelect}
+                      disabled={imagePreviews.length >= 3}
                       className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
                     />
-                    {imagePreview && (
-                      <div className="mt-3">
-                        <img
-                          src={imagePreview}
-                          alt="Preview"
-                          className="w-32 h-32 object-cover rounded-lg border"
-                        />
+                    {imagePreviews.length > 0 && (
+                      <div className="grid grid-cols-3 gap-3 mt-3">
+                        {imagePreviews.map((preview, index) => (
+                          <div key={index} className="relative group">
+                            <img
+                              src={preview}
+                              alt={`Preview ${index + 1}`}
+                              className="w-full h-32 object-cover rounded-lg border"
+                            />
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0"
+                              onClick={() => handleRemoveImage(index)}
+                            >
+                              ×
+                            </Button>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
@@ -409,7 +448,7 @@ const Admin: React.FC = () => {
                     <td className="p-4">
                       <div className="flex items-center space-x-3">
                         <img
-                          src={product.image}
+                          src={product.images?.[0] || product.images[0]}
                           alt={product.name}
                           className="w-12 h-12 rounded-lg object-cover bg-muted"
                         />

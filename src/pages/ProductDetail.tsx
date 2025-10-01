@@ -44,8 +44,7 @@ const ProductDetail: React.FC = () => {
     });
   };
 
-  // Mock additional images for gallery
-  const productImages = [product.image, product.image, product.image];
+  const productImages = product.images || [];
 
   return (
     <div className="min-h-screen py-8">

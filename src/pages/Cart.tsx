@@ -99,7 +99,7 @@ const Cart: React.FC = () => {
                   {/* Product Image */}
                   <div className="w-full md:w-32 h-48 md:h-32 rounded-lg overflow-hidden bg-gray-50">
                     <img
-                      src={item.image}
+                      src={item.images[0]}
                       alt={item.name}
                       className="w-full h-full object-cover"
                     />

@@ -6,42 +6,42 @@
 
 @layer base {
   :root {
-    /* Black & White Color Palette */
+    /* Golden & Black Color Palette */
     --background: 0 0% 100%;
-    --foreground: 0 0% 0%;
+    --foreground: 0 0% 5%;
 
-    /* Black Brand Colors */
-    --primary: 0 0% 0%;              /* Pure Black */
-    --primary-foreground: 0 0% 100%;
-    --primary-glow: 0 0% 20%;        /* Dark Gray */
+    /* Golden Brand Colors */
+    --primary: 43 96% 56%;           /* Rich Gold */
+    --primary-foreground: 0 0% 5%;
+    --primary-glow: 48 100% 67%;     /* Bright Gold */
     
-    --secondary: 0 0% 98%;           /* Off White */
-    --secondary-foreground: 0 0% 0%;
+    --secondary: 0 0% 8%;            /* Deep Black */
+    --secondary-foreground: 43 96% 56%;
     
-    --accent: 0 0% 85%;              /* Light Gray */
-    --accent-foreground: 0 0% 0%;
+    --accent: 43 74% 66%;            /* Light Gold */
+    --accent-foreground: 0 0% 5%;
 
     /* Card & Surface Colors */
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 0%;
-    --card-luxury: 0 0% 98%;         /* Off White */
+    --card-foreground: 0 0% 5%;
+    --card-luxury: 45 15% 96%;       /* Cream */
 
     /* Interactive States */
-    --muted: 0 0% 95%;
+    --muted: 45 20% 95%;
     --muted-foreground: 0 0% 40%;
     
-    --border: 0 0% 90%;
-    --input: 0 0% 95%;
-    --ring: 0 0% 0%;
+    --border: 43 30% 85%;
+    --input: 45 30% 95%;
+    --ring: 43 96% 56%;
 
-    /* Black & White Gradients */
-    --gradient-gold: linear-gradient(135deg, hsl(0 0% 0%) 0%, hsl(0 0% 20%) 100%);
-    --gradient-luxury: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(0 0% 98%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(0 0% 2%) 0%, hsl(0 0% 15%) 100%);
+    /* Golden Gradients */
+    --gradient-gold: linear-gradient(135deg, hsl(43 96% 56%) 0%, hsl(48 100% 67%) 100%);
+    --gradient-luxury: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(45 15% 96%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(0 0% 5%) 0%, hsl(0 0% 15%) 100%);
 
     /* Elegant Shadows */
-    --shadow-luxury: 0 20px 40px -12px hsl(0 0% 0% / 0.25);
-    --shadow-gold: 0 8px 32px hsl(0 0% 0% / 0.35);
+    --shadow-luxury: 0 20px 40px -12px hsl(43 96% 56% / 0.25);
+    --shadow-gold: 0 8px 32px hsl(43 96% 56% / 0.35);
     --shadow-soft: 0 4px 24px hsl(0 0% 0% / 0.08);
 
     /* Animations */
@@ -67,30 +67,30 @@
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
-  /* Dark mode (black & white theme) */
+  /* Dark mode (golden & black theme) */
   .dark {
-    --background: 0 0% 2%;
-    --foreground: 0 0% 95%;
+    --background: 0 0% 5%;
+    --foreground: 43 96% 56%;
     
-    --primary: 0 0% 100%;
-    --primary-foreground: 0 0% 0%;
+    --primary: 43 96% 56%;
+    --primary-foreground: 0 0% 5%;
     
-    --secondary: 0 0% 8%;
-    --secondary-foreground: 0 0% 95%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 43 96% 56%;
     
-    --accent: 0 0% 85%;
-    --accent-foreground: 0 0% 0%;
+    --accent: 43 74% 66%;
+    --accent-foreground: 0 0% 5%;
     
-    --card: 0 0% 4%;
-    --card-foreground: 0 0% 95%;
-    --card-luxury: 0 0% 8%;
+    --card: 0 0% 8%;
+    --card-foreground: 43 96% 56%;
+    --card-luxury: 0 0% 12%;
     
-    --muted: 0 0% 8%;
-    --muted-foreground: 0 0% 60%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 43 74% 66%;
     
-    --border: 0 0% 15%;
-    --input: 0 0% 8%;
-    --ring: 0 0% 100%;
+    --border: 0 0% 20%;
+    --input: 0 0% 12%;
+    --ring: 43 96% 56%;
   }
 }
 

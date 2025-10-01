@@ -173,7 +173,7 @@ const Shop: React.FC = () => {
                 ) : (
                   <div className="card-luxury p-6 flex flex-col md:flex-row gap-6 items-center">
                     <img
-                      src={product.image}
+                      src={product.images[0]}
                       alt={product.name}
                       className="w-32 h-32 object-cover rounded-lg"
                     />
