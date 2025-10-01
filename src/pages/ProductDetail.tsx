@@ -44,7 +44,10 @@ const ProductDetail: React.FC = () => {
     });
   };
 
-  const productImages = product.images || [];
+  const productImages = product.images && product.images.length > 0 ? product.images : [product.images?.[0] || ''].filter(Boolean);
+  
+  // Debug log
+  console.log('Product images:', productImages, 'Product:', product);
 
   return (
     <div className="min-h-screen py-8">

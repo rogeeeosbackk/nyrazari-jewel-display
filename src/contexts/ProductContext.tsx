@@ -414,17 +414,24 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (savedProducts) {
       try {
         const parsed = JSON.parse(savedProducts);
-        // Migrate old single image format to images array
-        const migrated = parsed.map((p: any) => ({
-          ...p,
-          images: p.images || (p.image ? [p.image, p.image, p.image] : [])
-        }));
+        // Migrate old single image format to images array and remove old image field
+        const migrated = parsed.map((p: any) => {
+          const { image, ...rest } = p;
+          return {
+            ...rest,
+            images: p.images || (p.image ? [p.image, p.image, p.image] : [])
+          };
+        });
+        console.log('Loaded and migrated products:', migrated);
         setProducts(migrated);
+        // Save migrated data back
+        localStorage.setItem('nyrazari-products', JSON.stringify(migrated));
       } catch (error) {
         console.error('Error loading products from localStorage:', error);
         setProducts(initialProducts);
       }
     } else {
+      console.log('No saved products, using initial data');
       setProducts(initialProducts);
     }
   }, []);
