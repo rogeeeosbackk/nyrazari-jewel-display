@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Plus, Edit, Trash2, Eye, EyeOff, Package, ShoppingCart, DollarSign } from 'lucide-react';
-import { useProducts } from '../contexts/ProductContext';
-import { Product } from '../contexts/CartContext';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useProducts } from '@/contexts/ProductContext';
+import { Product } from '@/contexts/CartContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,11 +10,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { Plus, Edit, Trash2, Package, ShoppingCart, DollarSign } from 'lucide-react';
+import { motion } from 'framer-motion';
 
-const Admin: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+export default function Admin() {
+  const { products, addProduct, updateProduct, deleteProduct } = useProducts();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -28,39 +32,49 @@ const Admin: React.FC = () => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
-  const { products, addProduct, updateProduct, deleteProduct } = useProducts();
-  const { toast } = useToast();
-
-  // Check authentication on mount
+  // Check if user is admin
   useEffect(() => {
-    const adminAuth = localStorage.getItem('nyrazari-admin');
-    if (adminAuth === 'authenticated') {
-      setIsAuthenticated(true);
-    }
+    checkAdminStatus();
   }, []);
 
-  const handleLogin = () => {
-    // Simple password check - in real app, this would be more secure
-    if (password === 'admin123') {
-      setIsAuthenticated(true);
-      localStorage.setItem('nyrazari-admin', 'authenticated');
-      toast({
-        title: "Welcome to Admin Panel",
-        description: "You are now logged in as administrator.",
-      });
-    } else {
-      toast({
-        title: "Authentication Failed",
-        description: "Incorrect password. Please try again.",
-        variant: "destructive",
-      });
+  const checkAdminStatus = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        navigate('/auth');
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .eq('role', 'admin')
+        .single();
+
+      if (error || !data) {
+        toast({
+          title: "Access Denied",
+          description: "You do not have admin access",
+          variant: "destructive",
+        });
+        navigate('/');
+        return;
+      }
+
+      setIsAdmin(true);
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+      navigate('/');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    localStorage.removeItem('nyrazari-admin');
-    setPassword('');
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/auth');
   };
 
   const resetForm = () => {
@@ -117,7 +131,7 @@ const Admin: React.FC = () => {
     setFormData(prev => ({ ...prev, images: newPreviews }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.name || !formData.price || !formData.category) {
@@ -138,22 +152,18 @@ const Admin: React.FC = () => {
       images: formData.images.length > 0 ? formData.images : ['/src/assets/placeholder-product.jpg'],
     };
 
-    if (editingProduct) {
-      updateProduct(editingProduct.id, productData);
-      toast({
-        title: "Product updated",
-        description: `${formData.name} has been updated successfully.`,
-      });
-    } else {
-      addProduct(productData);
-      toast({
-        title: "Product added",
-        description: `${formData.name} has been added to the catalog.`,
-      });
+    try {
+      if (editingProduct) {
+        await updateProduct(editingProduct.id, productData);
+      } else {
+        await addProduct(productData);
+      }
+      
+      resetForm();
+      setIsDialogOpen(false);
+    } catch (error) {
+      // Error is handled in context
     }
-
-    resetForm();
-    setIsDialogOpen(false);
   };
 
   const handleEdit = (product: Product) => {
@@ -171,65 +181,24 @@ const Admin: React.FC = () => {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (product: Product) => {
+  const handleDelete = async (product: Product) => {
     if (window.confirm(`Are you sure you want to delete ${product.name}?`)) {
-      deleteProduct(product.id);
-      toast({
-        title: "Product deleted",
-        description: `${product.name} has been removed from the catalog.`,
-      });
+      await deleteProduct(product.id);
     }
   };
 
-  // Login screen
-  if (!isAuthenticated) {
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center py-20">
-        <motion.div
-          className="card-luxury p-8 max-w-md w-full mx-4"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold mb-2">Admin Access</h1>
-            <p className="text-muted-foreground">Enter password to access admin panel</p>
-          </div>
-
-          <div className="space-y-4">
-            <div className="relative">
-              <Input
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Enter admin password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="absolute right-2 top-1/2 -translate-y-1/2"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </Button>
-            </div>
-            
-            <Button onClick={handleLogin} className="w-full btn-luxury">
-              Login
-            </Button>
-          </div>
-
-          <p className="text-xs text-muted-foreground text-center mt-4">
-            Demo password: admin123
-          </p>
-        </motion.div>
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Loading...</p>
       </div>
     );
   }
 
-  // Admin dashboard
+  if (!isAdmin) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4 lg:px-8">
@@ -461,32 +430,23 @@ const Admin: React.FC = () => {
                       </div>
                     </td>
                     <td className="p-4 capitalize">{product.category}</td>
-                    <td className="p-4 font-medium">${product.price.toLocaleString()}</td>
+                    <td className="p-4">${product.price.toLocaleString()}</td>
+                    <td className="p-4">{product.stock}</td>
                     <td className="p-4">
-                      <span className={`px-2 py-1 rounded-full text-xs ${
-                        product.stock > 10 ? 'bg-green-100 text-green-800' :
-                        product.stock > 0 ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
-                        {product.stock} units
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <div className="flex space-x-2">
+                      <div className="flex gap-2">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleEdit(product)}
                         >
-                          <Edit className="h-3 w-3" />
+                          <Edit className="h-4 w-4" />
                         </Button>
                         <Button
-                          variant="outline"
+                          variant="destructive"
                           size="sm"
                           onClick={() => handleDelete(product)}
-                          className="text-destructive hover:text-destructive"
                         >
-                          <Trash2 className="h-3 w-3" />
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </td>
@@ -499,6 +459,4 @@ const Admin: React.FC = () => {
       </div>
     </div>
   );
-};
-
-export default Admin;
+}

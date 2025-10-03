@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Product } from './CartContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface ProductContextType {
   products: Product[];
@@ -407,60 +409,128 @@ const initialProducts: Product[] = [
 
 export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
+  // Fetch products from Supabase
   useEffect(() => {
-    // Load products from localStorage or use initial data
-    const savedProducts = localStorage.getItem('nyrazari-products');
-    if (savedProducts) {
-      try {
-        const parsed = JSON.parse(savedProducts);
-        // Migrate old single image format to images array and remove old image field
-        const migrated = parsed.map((p: any) => {
-          const { image, ...rest } = p;
-          return {
-            ...rest,
-            images: p.images || (p.image ? [p.image, p.image, p.image] : [])
-          };
-        });
-        console.log('Loaded and migrated products:', migrated);
-        setProducts(migrated);
-        // Save migrated data back
-        localStorage.setItem('nyrazari-products', JSON.stringify(migrated));
-      } catch (error) {
-        console.error('Error loading products from localStorage:', error);
-        setProducts(initialProducts);
-      }
-    } else {
-      console.log('No saved products, using initial data');
-      setProducts(initialProducts);
-    }
+    fetchProducts();
   }, []);
 
-  useEffect(() => {
-    // Save products to localStorage whenever they change
-    if (products.length > 0) {
-      localStorage.setItem('nyrazari-products', JSON.stringify(products));
+  const fetchProducts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Transform database format to Product interface
+      const transformedProducts = data.map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        price: Number(p.price),
+        offerPrice: p.offer_price ? Number(p.offer_price) : undefined,
+        images: p.images || [],
+        category: p.category,
+        description: p.description,
+        stock: p.stock,
+      }));
+
+      setProducts(transformedProducts);
+    } catch (error: any) {
+      console.error('Error fetching products:', error);
+      toast.error('Failed to load products');
+    } finally {
+      setLoading(false);
     }
-  }, [products]);
-
-  const addProduct = (productData: Omit<Product, 'id'>) => {
-    const newProduct: Product = {
-      ...productData,
-      id: Date.now().toString(),
-    };
-    setProducts(prev => [...prev, newProduct]);
   };
 
-  const updateProduct = (id: string, updates: Partial<Product>) => {
-    setProducts(prev =>
-      prev.map(product =>
-        product.id === id ? { ...product, ...updates } : product
-      )
-    );
+  const addProduct = async (productData: Omit<Product, 'id'>) => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .insert({
+          name: productData.name,
+          price: productData.price,
+          offer_price: productData.offerPrice,
+          images: productData.images,
+          category: productData.category,
+          description: productData.description,
+          stock: productData.stock,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Transform and add to local state
+      const newProduct: Product = {
+        id: data.id,
+        name: data.name,
+        price: Number(data.price),
+        offerPrice: data.offer_price ? Number(data.offer_price) : undefined,
+        images: data.images || [],
+        category: data.category,
+        description: data.description,
+        stock: data.stock,
+      };
+
+      setProducts(prev => [newProduct, ...prev]);
+      toast.success('Product added successfully!');
+    } catch (error: any) {
+      console.error('Error adding product:', error);
+      toast.error('Failed to add product');
+      throw error;
+    }
   };
 
-  const deleteProduct = (id: string) => {
-    setProducts(prev => prev.filter(product => product.id !== id));
+  const updateProduct = async (id: string, updates: Partial<Product>) => {
+    try {
+      const { error } = await supabase
+        .from('products')
+        .update({
+          name: updates.name,
+          price: updates.price,
+          offer_price: updates.offerPrice,
+          images: updates.images,
+          category: updates.category,
+          description: updates.description,
+          stock: updates.stock,
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setProducts(prev =>
+        prev.map(product =>
+          product.id === id ? { ...product, ...updates } : product
+        )
+      );
+      toast.success('Product updated successfully!');
+    } catch (error: any) {
+      console.error('Error updating product:', error);
+      toast.error('Failed to update product');
+      throw error;
+    }
+  };
+
+  const deleteProduct = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setProducts(prev => prev.filter(product => product.id !== id));
+      toast.success('Product deleted successfully!');
+    } catch (error: any) {
+      console.error('Error deleting product:', error);
+      toast.error('Failed to delete product');
+      throw error;
+    }
   };
 
   const getProductById = (id: string) => {
