@@ -31,6 +31,7 @@ export default function Admin() {
   });
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [uploadedImageUrls, setUploadedImageUrls] = useState<string[]>([]);
 
   // Check if user is admin
   useEffect(() => {
@@ -89,6 +90,7 @@ export default function Admin() {
     setEditingProduct(null);
     setSelectedFiles([]);
     setImagePreviews([]);
+    setUploadedImageUrls([]);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -116,7 +118,6 @@ export default function Admin() {
         newPreviews.push(result);
         if (newPreviews.length === newFiles.length) {
           setImagePreviews(newPreviews);
-          setFormData(prev => ({ ...prev, images: newPreviews }));
         }
       };
       reader.readAsDataURL(file);
@@ -126,9 +127,42 @@ export default function Admin() {
   const handleRemoveImage = (index: number) => {
     const newFiles = selectedFiles.filter((_, i) => i !== index);
     const newPreviews = imagePreviews.filter((_, i) => i !== index);
+    const newUrls = uploadedImageUrls.filter((_, i) => i !== index);
     setSelectedFiles(newFiles);
     setImagePreviews(newPreviews);
-    setFormData(prev => ({ ...prev, images: newPreviews }));
+    setUploadedImageUrls(newUrls);
+  };
+
+  const uploadImages = async (): Promise<string[]> => {
+    const urls: string[] = [...uploadedImageUrls];
+
+    for (let i = 0; i < selectedFiles.length; i++) {
+      const file = selectedFiles[i];
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('product-images')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        toast({
+          title: "Upload failed",
+          description: `Failed to upload ${file.name}`,
+          variant: "destructive",
+        });
+        throw uploadError;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('product-images')
+        .getPublicUrl(filePath);
+
+      urls.push(publicUrl);
+    }
+
+    return urls;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -143,16 +177,22 @@ export default function Admin() {
       return;
     }
 
-    const productData = {
-      name: formData.name,
-      price: parseFloat(formData.price),
-      category: formData.category,
-      description: formData.description,
-      stock: parseInt(formData.stock) || 0,
-      images: formData.images.length > 0 ? formData.images : ['/src/assets/placeholder-product.jpg'],
-    };
-
     try {
+      // Upload new images if any
+      let imageUrls = uploadedImageUrls;
+      if (selectedFiles.length > 0) {
+        imageUrls = await uploadImages();
+      }
+
+      const productData = {
+        name: formData.name,
+        price: parseFloat(formData.price),
+        category: formData.category,
+        description: formData.description,
+        stock: parseInt(formData.stock) || 0,
+        images: imageUrls.length > 0 ? imageUrls : ['/src/assets/placeholder-product.jpg'],
+      };
+
       if (editingProduct) {
         await updateProduct(editingProduct.id, productData);
       } else {
@@ -177,6 +217,7 @@ export default function Admin() {
       images: product.images || [],
     });
     setImagePreviews(product.images || []);
+    setUploadedImageUrls(product.images || []);
     setSelectedFiles([]);
     setIsDialogOpen(true);
   };
