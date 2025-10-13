@@ -1,20 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ShoppingBag, Minus, Plus, X, ArrowRight } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import CustomerForm, { CustomerData } from '../components/CustomerForm';
 import WhatsAppModal from '../components/WhatsAppModal';
+import { supabase } from '@/integrations/supabase/client';
 
 const Cart: React.FC = () => {
   const { items, total, itemCount, removeFromCart, updateQuantity, clearCart } = useCart();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   const [showCustomerForm, setShowCustomerForm] = useState(false);
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [customerName, setCustomerName] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+
+  useEffect(() => {
+    const paymentStatus = searchParams.get('payment');
+    const txnId = searchParams.get('txnId');
+    
+    if (paymentStatus === 'success') {
+      toast({
+        title: "Payment Successful! 🎉",
+        description: txnId ? `Transaction ID: ${txnId}` : "Your order has been placed successfully.",
+      });
+      clearCart();
+    } else if (paymentStatus === 'failed') {
+      toast({
+        title: "Payment Failed",
+        description: "Your payment could not be processed. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }, [searchParams]);
 
   const handleProceedToCheckout = () => {
     if (items.length === 0) return;
@@ -24,16 +45,57 @@ const Cart: React.FC = () => {
   const handleCustomerFormSubmit = async (customerData: CustomerData) => {
     setIsProcessing(true);
     
-    // Simulate processing delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    setCustomerName(customerData.name);
-    setShowCustomerForm(false);
-    setShowWhatsAppModal(true);
-    setIsProcessing(false);
-    
-    // Clear cart after successful order
-    clearCart();
+    try {
+      // Calculate total with tax
+      const totalWithTax = total * 1.08;
+
+      // Call PhonePe payment initiation
+      const { data: userData } = await supabase.auth.getUser();
+      
+      if (!userData.user) {
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to complete your purchase.",
+          variant: "destructive",
+        });
+        setIsProcessing(false);
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('initiate-payment', {
+        body: {
+          amount: totalWithTax,
+          customerName: customerData.name,
+          customerEmail: customerData.email,
+          customerPhone: customerData.phone,
+          items: items.map(item => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+          })),
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data?.success && data?.paymentUrl) {
+        // Redirect to PhonePe payment page
+        window.location.href = data.paymentUrl;
+      } else {
+        throw new Error('Failed to initiate payment');
+      }
+    } catch (error: any) {
+      console.error('Payment error:', error);
+      toast({
+        title: "Payment Error",
+        description: error.message || "Failed to initiate payment. Please try again.",
+        variant: "destructive",
+      });
+      setIsProcessing(false);
+    }
   };
 
   const handleWhatsAppModalClose = () => {
