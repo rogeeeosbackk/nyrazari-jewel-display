@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { ShoppingBag, Minus, Plus, X, ArrowRight } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 const Cart: React.FC = () => {
   const { items, total, itemCount, removeFromCart, updateQuantity, clearCart } = useCart();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [showCustomerForm, setShowCustomerForm] = useState(false);
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
@@ -23,11 +24,8 @@ const Cart: React.FC = () => {
     const txnId = searchParams.get('txnId');
     
     if (paymentStatus === 'success') {
-      toast({
-        title: "Payment Successful! 🎉",
-        description: txnId ? `Transaction ID: ${txnId}` : "Your order has been placed successfully.",
-      });
       clearCart();
+      navigate(`/order-success?orderId=${txnId || 'N/A'}`);
     } else if (paymentStatus === 'failed') {
       toast({
         title: "Payment Failed",
@@ -35,7 +33,7 @@ const Cart: React.FC = () => {
         variant: "destructive",
       });
     }
-  }, [searchParams]);
+  }, [searchParams, navigate, clearCart]);
 
   const handleProceedToCheckout = () => {
     if (items.length === 0) return;
