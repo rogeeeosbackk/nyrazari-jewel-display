@@ -142,6 +142,9 @@ const Footer: React.FC = () => {
             <Link to="/returns" className="hover:text-primary transition-colors">
               Returns
             </Link>
+            <Link to="/shipping-policy" className="hover:text-primary transition-colors">
+              Shipping Policy
+            </Link>
           </div>
         </motion.div>
       </div>
