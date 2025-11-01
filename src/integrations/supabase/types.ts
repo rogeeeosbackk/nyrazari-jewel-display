@@ -103,19 +103,37 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address: string | null
+          city: string | null
           created_at: string
           email: string | null
+          full_name: string | null
           id: string
+          phone: string | null
+          postal_code: string | null
+          updated_at: string | null
         }
         Insert: {
+          address?: string | null
+          city?: string | null
           created_at?: string
           email?: string | null
+          full_name?: string | null
           id: string
+          phone?: string | null
+          postal_code?: string | null
+          updated_at?: string | null
         }
         Update: {
+          address?: string | null
+          city?: string | null
           created_at?: string
           email?: string | null
+          full_name?: string | null
           id?: string
+          phone?: string | null
+          postal_code?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -142,10 +160,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      is_admin: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"

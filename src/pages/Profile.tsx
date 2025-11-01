@@ -5,7 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { User, Package, LogOut } from "lucide-react";
+import { User, Package, LogOut, Edit2, Save, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface OrderItem {
   name: string;
@@ -25,12 +31,43 @@ interface Order {
   customer_phone: string;
 }
 
+interface Profile {
+  id: string;
+  email: string;
+  full_name?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  postal_code?: string;
+}
+
+const profileSchema = z.object({
+  full_name: z.string().min(2, "Name must be at least 2 characters").max(100),
+  phone: z.string().min(10, "Phone must be at least 10 digits").max(15).optional().or(z.literal("")),
+  address: z.string().max(200).optional().or(z.literal("")),
+  city: z.string().max(100).optional().or(z.literal("")),
+  postal_code: z.string().max(20).optional().or(z.literal("")),
+});
+
 const Profile = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  
+  const form = useForm<z.infer<typeof profileSchema>>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      full_name: "",
+      phone: "",
+      address: "",
+      city: "",
+      postal_code: "",
+    },
+  });
 
   useEffect(() => {
     checkUser();
@@ -45,8 +82,35 @@ const Profile = () => {
     }
 
     setUser(user);
+    await fetchProfile(user.id);
     await fetchOrders(user.id);
     setLoading(false);
+  };
+
+  const fetchProfile = async (userId: string) => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
+      .single();
+
+    if (error) {
+      toast({
+        title: "Error fetching profile",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setProfile(data);
+    form.reset({
+      full_name: data.full_name || "",
+      phone: data.phone || "",
+      address: data.address || "",
+      city: data.city || "",
+      postal_code: data.postal_code || "",
+    });
   };
 
   const fetchOrders = async (userId: string) => {
@@ -76,6 +140,36 @@ const Profile = () => {
     });
   };
 
+  const onSubmit = async (values: z.infer<typeof profileSchema>) => {
+    if (!user) return;
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        full_name: values.full_name,
+        phone: values.phone || null,
+        address: values.address || null,
+        city: values.city || null,
+        postal_code: values.postal_code || null,
+      })
+      .eq("id", user.id);
+
+    if (error) {
+      toast({
+        title: "Error updating profile",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    await fetchProfile(user.id);
+    setIsEditing(false);
+    toast({
+      title: "Profile updated successfully",
+    });
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "COMPLETED":
@@ -97,10 +191,30 @@ const Profile = () => {
     );
   }
 
+  const getInitials = (name?: string) => {
+    if (!name) return "U";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">My Account</h1>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div className="flex items-center gap-4">
+          <Avatar className="h-16 w-16">
+            <AvatarFallback className="bg-primary text-primary-foreground text-xl">
+              {getInitials(profile?.full_name)}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <h1 className="text-3xl font-bold">{profile?.full_name || "My Account"}</h1>
+            <p className="text-muted-foreground">{profile?.email}</p>
+          </div>
+        </div>
         <Button onClick={handleSignOut} variant="outline">
           <LogOut className="w-4 h-4 mr-2" />
           Sign Out
@@ -122,24 +236,126 @@ const Profile = () => {
         <TabsContent value="profile">
           <Card>
             <CardHeader>
-              <CardTitle>Profile Information</CardTitle>
-              <CardDescription>Your account details</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {user?.user_metadata?.full_name && (
+              <div className="flex justify-between items-center">
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Name</label>
-                  <p className="text-lg">{user.user_metadata.full_name}</p>
+                  <CardTitle>Profile Information</CardTitle>
+                  <CardDescription>Manage your personal details</CardDescription>
                 </div>
+                {!isEditing ? (
+                  <Button onClick={() => setIsEditing(true)} variant="outline" size="sm">
+                    <Edit2 className="w-4 h-4 mr-2" />
+                    Edit Profile
+                  </Button>
+                ) : (
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={() => {
+                        setIsEditing(false);
+                        form.reset();
+                      }} 
+                      variant="outline" 
+                      size="sm"
+                    >
+                      <X className="w-4 h-4 mr-2" />
+                      Cancel
+                    </Button>
+                    <Button 
+                      onClick={form.handleSubmit(onSubmit)} 
+                      size="sm"
+                    >
+                      <Save className="w-4 h-4 mr-2" />
+                      Save Changes
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              {!isEditing ? (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <Label className="text-muted-foreground">Full Name</Label>
+                      <p className="text-lg mt-1">{profile?.full_name || "Not set"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Email</Label>
+                      <p className="text-lg mt-1">{profile?.email}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Phone</Label>
+                      <p className="text-lg mt-1">{profile?.phone || "Not set"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">City</Label>
+                      <p className="text-lg mt-1">{profile?.city || "Not set"}</p>
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label className="text-muted-foreground">Address</Label>
+                      <p className="text-lg mt-1">{profile?.address || "Not set"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Postal Code</Label>
+                      <p className="text-lg mt-1">{profile?.postal_code || "Not set"}</p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="full_name">Full Name *</Label>
+                      <Input
+                        id="full_name"
+                        {...form.register("full_name")}
+                        placeholder="Enter your full name"
+                      />
+                      {form.formState.errors.full_name && (
+                        <p className="text-sm text-destructive">
+                          {form.formState.errors.full_name.message}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Phone</Label>
+                      <Input
+                        id="phone"
+                        {...form.register("phone")}
+                        placeholder="Enter your phone number"
+                      />
+                      {form.formState.errors.phone && (
+                        <p className="text-sm text-destructive">
+                          {form.formState.errors.phone.message}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="city">City</Label>
+                      <Input
+                        id="city"
+                        {...form.register("city")}
+                        placeholder="Enter your city"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="postal_code">Postal Code</Label>
+                      <Input
+                        id="postal_code"
+                        {...form.register("postal_code")}
+                        placeholder="Enter postal code"
+                      />
+                    </div>
+                    <div className="md:col-span-2 space-y-2">
+                      <Label htmlFor="address">Address</Label>
+                      <Input
+                        id="address"
+                        {...form.register("address")}
+                        placeholder="Enter your address"
+                      />
+                    </div>
+                  </div>
+                </form>
               )}
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">Email</label>
-                <p className="text-lg">{user?.email}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">User ID</label>
-                <p className="text-sm font-mono text-muted-foreground">{user?.id}</p>
-              </div>
             </CardContent>
           </Card>
         </TabsContent>
