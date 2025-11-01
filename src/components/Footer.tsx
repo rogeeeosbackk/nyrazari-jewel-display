@@ -133,10 +133,10 @@ const Footer: React.FC = () => {
             © {currentYear} Nyrazari. All rights reserved.
           </div>
           <div className="flex space-x-6 text-sm text-gray-300">
-            <Link to="/privacy" className="hover:text-primary transition-colors">
+            <Link to="/privacy-policy" className="hover:text-primary transition-colors">
               Privacy Policy
             </Link>
-            <Link to="/terms" className="hover:text-primary transition-colors">
+            <Link to="/terms-of-service" className="hover:text-primary transition-colors">
               Terms of Service
             </Link>
             <Link to="/returns" className="hover:text-primary transition-colors">

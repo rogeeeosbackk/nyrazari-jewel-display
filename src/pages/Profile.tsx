@@ -126,6 +126,12 @@ const Profile = () => {
               <CardDescription>Your account details</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {user?.user_metadata?.full_name && (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Name</label>
+                  <p className="text-lg">{user.user_metadata.full_name}</p>
+                </div>
+              )}
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Email</label>
                 <p className="text-lg">{user?.email}</p>
